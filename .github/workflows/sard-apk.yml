@@ -29,6 +29,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Install protoc and the nanopb generator's Python modules
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq protobuf-compiler python3-protobuf > /dev/null
+          protoc --version
+
       - name: Install the NDK and CMake the app needs
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" > /dev/null
 
