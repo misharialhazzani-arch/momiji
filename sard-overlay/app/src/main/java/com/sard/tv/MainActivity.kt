@@ -32,6 +32,7 @@ class MainActivity : Activity()
 	private lateinit var permissionView: TextView
 	private lateinit var permissionButton: Button
 	private lateinit var clientView: TextView
+	private lateinit var diagnosticView: TextView
 	private val main = Handler(Looper.getMainLooper())
 	private var font: Typeface = Typeface.DEFAULT_BOLD
 
@@ -118,6 +119,8 @@ class MainActivity : Activity()
 		gap(4)
 		clientView = text(16f, Color.parseColor("#9AA0AA"))
 		add(clientView)
+		diagnosticView = text(14f, Color.parseColor("#9AA0AA"))
+		add(diagnosticView)
 		gap(20)
 		permissionView = text(17f)
 		add(permissionView)
@@ -159,6 +162,40 @@ class MainActivity : Activity()
 		if(allowed)
 			OverlayService.start(this) // adds the overlay now that it may
 		refreshClient()
+		main.postDelayed({ runDiagnostics() }, 1200)
+	}
+
+	/** Checks that the server answers, from inside the TV and on its network address */
+	private fun runDiagnostics()
+	{
+		val service = OverlayService.instance
+		val serverStatus = service?.server?.status ?: "service not running"
+		val fgError = service?.foregroundError
+		val ip = localAddress()
+		Thread {
+			fun probe(host: String?): String
+			{
+				if(host == null) return "no address"
+				return try
+				{
+					val c = java.net.URL("http://$host:${OverlayService.PORT}/api/info").openConnection() as java.net.HttpURLConnection
+					c.connectTimeout = 1500
+					c.readTimeout = 1500
+					val code = c.responseCode
+					c.disconnect()
+					if(code == 200) "OK" else "HTTP $code"
+				}
+				catch(e: Exception) { e.javaClass.simpleName }
+			}
+			val local = probe("127.0.0.1")
+			val lan = probe(ip)
+			val good = local == "OK" && lan == "OK"
+			main.post {
+				diagnosticView.setTextColor(if(good) Color.parseColor("#3DDC84") else Color.parseColor("#FF6B6B"))
+				diagnosticView.text = (if(good) "✓ الخادم يعمل ويمكن الوصول له من الشبكة" else "✗ مشكلة في الخادم") +
+					"\nserver=$serverStatus · local=$local · lan=$lan" + (fgError?.let { "\nforeground=$it" } ?: "")
+			}
+		}.start()
 	}
 
 	private fun refreshClient()

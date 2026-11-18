@@ -60,7 +60,11 @@ class OverlayService : Service()
 	private var windowManager: WindowManager? = null
 	private var root: FrameLayout? = null
 	private var textView: TextView? = null
-	private var server: SubtitleServer? = null
+	var server: SubtitleServer? = null
+		private set
+	/** Why the service couldn't run in the foreground, if it couldn't (shown on the TV screen) */
+	@Volatile var foregroundError: String? = null
+		private set
 	private var nsd: NsdManager? = null
 	private var nsdListener: NsdManager.RegistrationListener? = null
 
@@ -77,7 +81,9 @@ class OverlayService : Service()
 		super.onCreate()
 		instance = this
 		prefs = Prefs(this)
-		goForeground()
+		// The server must start even where the system refuses a foreground service
+		try { goForeground() }
+		catch(e: Exception) { foregroundError = "${e.javaClass.simpleName}: ${e.message}"; Log.e(TAG, "startForeground failed", e) }
 		server = SubtitleServer(PORT, { prefs.pairingCode }, this::onCommand).also { it.start() }
 		advertise()
 	}

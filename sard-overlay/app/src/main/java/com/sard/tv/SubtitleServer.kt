@@ -40,6 +40,10 @@ class SubtitleServer(
 		private const val MAX_BODY = 64 * 1024
 	}
 
+	/** For the TV screen: "starting", "listening", or the error that stopped the server */
+	@Volatile var status = "starting"
+		private set
+
 	private var socket: ServerSocket? = null
 	private val pool = Executors.newCachedThreadPool()
 	@Volatile private var running = false
@@ -54,6 +58,7 @@ class SubtitleServer(
 				server.reuseAddress = true
 				server.bind(InetSocketAddress(port))
 				socket = server
+				status = "listening"
 				while(running)
 				{
 					val client = server.accept()
@@ -63,7 +68,10 @@ class SubtitleServer(
 			catch(e: Exception)
 			{
 				if(running)
+				{
+					status = "${e.javaClass.simpleName}: ${e.message}"
 					Log.e(TAG, "Server stopped", e)
+				}
 			}
 		}, "SardServer").start()
 	}

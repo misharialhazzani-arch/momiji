@@ -29,20 +29,34 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Without the SARD_KEYSTORE secrets each build gets a new key, and updating means reinstalling
+      # Android only updates an installed app with an APK signed by the same key. The key is made
+      # once and kept in this repository's Actions cache (not in the code); the SARD_KEYSTORE
+      # secrets, when set, take its place.
+      - name: Restore the signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.sard-signing
+          key: sard-signing-key-v1
+
       - name: Signing
         env:
           SARD_KEYSTORE: ${{ secrets.SARD_KEYSTORE }}
           SARD_KEYSTORE_PASSWORD: ${{ secrets.SARD_KEYSTORE_PASSWORD }}
         run: |
-          KS="$RUNNER_TEMP/sard.jks"
+          mkdir -p ~/.sard-signing
+          KS="$HOME/.sard-signing/sard.jks"
           if [ -n "$SARD_KEYSTORE" ] && [ -n "$SARD_KEYSTORE_PASSWORD" ]; then
-            echo "$SARD_KEYSTORE" | base64 -d > "$KS"
+            echo "$SARD_KEYSTORE" | base64 -d > "$RUNNER_TEMP/secret.jks"
+            KS="$RUNNER_TEMP/secret.jks"
             PW="$SARD_KEYSTORE_PASSWORD"
           else
-            PW="$(openssl rand -hex 16)"
-            keytool -genkeypair -keystore "$KS" -alias sard -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass "$PW" -keypass "$PW" -dname "CN=Sard" > /dev/null
+            if [ ! -f "$KS" ]; then
+              openssl rand -hex 16 > ~/.sard-signing/pw
+              keytool -genkeypair -keystore "$KS" -alias sard -keyalg RSA -keysize 2048 -validity 10000 \
+                -storepass "$(cat ~/.sard-signing/pw)" -keypass "$(cat ~/.sard-signing/pw)" -dname "CN=Sard" > /dev/null
+              echo "Made a new signing key"
+            fi
+            PW="$(cat ~/.sard-signing/pw)"
           fi
           cat > sard-overlay/local.properties <<EOF
           sdk.dir=$ANDROID_HOME
