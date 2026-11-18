@@ -5,7 +5,7 @@ name: Build Sard APK
 
 on:
   push:
-    branches: [main]
+    branches: [sard]
   workflow_dispatch:
 
 permissions:
@@ -28,8 +28,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-
-      - uses: gradle/actions/setup-gradle@v4
 
       - name: Install the NDK and CMake the app needs
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" > /dev/null
