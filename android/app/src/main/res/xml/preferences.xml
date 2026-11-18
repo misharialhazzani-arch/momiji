@@ -164,6 +164,31 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:key="category_arabic_subtitles"
+        app:title="@string/preferences_category_arabic_subtitles">
+        <SwitchPreference
+            app:key="arabic_subtitles_online"
+            app:title="@string/preferences_arabic_subtitles_online_title"
+            app:summary="@string/preferences_arabic_subtitles_online_summary"
+            app:defaultValue="true" />
+        <SeekBarPreference
+            app:key="arabic_subtitles_text_size"
+            app:title="@string/preferences_arabic_subtitles_text_size_title"
+            android:min="16"
+            android:max="44"
+            app:defaultValue="24"
+            app:showSeekBarValue="true" />
+        <SeekBarPreference
+            app:key="arabic_subtitles_region_top"
+            app:title="@string/preferences_arabic_subtitles_region_title"
+            app:summary="@string/preferences_arabic_subtitles_region_summary"
+            android:min="40"
+            android:max="90"
+            app:defaultValue="68"
+            app:showSeekBarValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         app:key="category_export"
         app:title="@string/preferences_category_title_export">
         <Preference

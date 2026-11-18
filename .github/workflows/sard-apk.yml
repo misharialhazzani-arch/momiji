@@ -1,0 +1,86 @@
+# Builds سرد (Momiji + Arabic subtitles) and publishes the APK, so it can be installed on the TV
+# from a fixed link:
+#   https://github.com/misharialhazzani-arch/momiji/releases/latest/download/sard.apk
+name: Build Sard APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sard-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install the NDK and CMake the app needs
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" > /dev/null
+
+      # Android only updates an installed app with an APK signed by the same key. Keep one key in
+      # the repository secrets SARD_KEYSTORE (base64 of the .jks) and SARD_KEYSTORE_PASSWORD
+      # (alias "sard"). Without them each build gets a new key, and updating means reinstalling.
+      - name: Signing
+        env:
+          SARD_KEYSTORE: ${{ secrets.SARD_KEYSTORE }}
+          SARD_KEYSTORE_PASSWORD: ${{ secrets.SARD_KEYSTORE_PASSWORD }}
+        run: |
+          KS="$RUNNER_TEMP/sard.jks"
+          if [ -n "$SARD_KEYSTORE" ] && [ -n "$SARD_KEYSTORE_PASSWORD" ]; then
+            echo "$SARD_KEYSTORE" | base64 -d > "$KS"
+            PW="$SARD_KEYSTORE_PASSWORD"
+          else
+            echo "::warning::No SARD_KEYSTORE secret: signing with a one-time key"
+            PW="$(openssl rand -hex 16)"
+            keytool -genkeypair -keystore "$KS" -alias sard -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$PW" -keypass "$PW" -dname "CN=Sard" > /dev/null
+          fi
+          cat > android/local.properties <<EOF
+          sdk.dir=$ANDROID_HOME
+          chiakiKeystore=$KS
+          chiakiKeystorePW=$PW
+          chiakiKeyAlias=sard
+          chiakiKeyPW=$PW
+          EOF
+
+      - name: Build
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace assembleFdroidRelease
+
+      - name: Collect the APK
+        run: |
+          find android/app/build/outputs/apk -name "*.apk"
+          cp "$(find android/app/build/outputs/apk/fdroid/release -name '*.apk' | head -1)" sard.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sard-apk
+          path: sard.apk
+
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: sard-${{ github.run_number }}
+          name: سرد ${{ github.run_number }}
+          body: |
+            ثبّته على التلفزيون من تطبيق Downloader بهذا الرابط:
+            https://github.com/${{ github.repository }}/releases/latest/download/sard.apk
+          files: sard.apk
+          make_latest: true

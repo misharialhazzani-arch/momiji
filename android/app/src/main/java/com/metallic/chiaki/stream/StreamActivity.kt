@@ -23,6 +23,7 @@ import android.util.Log
 import android.util.Rational
 import android.view.*
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +39,7 @@ import com.metallic.chiaki.common.Preferences
 import com.metallic.chiaki.common.isDesktopMode
 import com.metallic.chiaki.common.ext.viewModelFactory
 import com.metallic.chiaki.databinding.ActivityStreamBinding
+import com.metallic.chiaki.subtitles.ArabicSubtitles
 import com.metallic.chiaki.lib.ConnectInfo
 import com.metallic.chiaki.lib.ConnectVideoProfile
 import com.metallic.chiaki.main.MainActivity
@@ -134,6 +136,11 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 		binding.statsSwitch.isChecked = Preferences(this).streamStatsEnabled
 		binding.statsSwitch.setOnCheckedChangeListener { _, isChecked ->
 			setStatsVisible(isChecked)
+			showOverlay()
+		}
+		binding.arabicSubtitlesSwitch.isChecked = Preferences(this).arabicSubtitlesEnabled
+		binding.arabicSubtitlesSwitch.setOnCheckedChangeListener { _, isChecked ->
+			setArabicSubtitlesEnabled(isChecked)
 			showOverlay()
 		}
 
@@ -243,6 +250,7 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 
 	/** Draws the video through shaders, when debanding or super resolution is on */
 	private var videoRenderer: VideoRenderer? = null
+	private var arabicSubtitles: ArabicSubtitles? = null
 
 	/**
 	 * Lets the display run at a rate that fits the stream, for example 60 or 120 Hz instead of 90 Hz,
@@ -395,6 +403,8 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 		viewModel.session.resume()
 		if(Preferences(this).streamStatsEnabled)
 			setStatsVisible(true)
+		if(Preferences(this).arabicSubtitlesEnabled)
+			startArabicSubtitles()
 		statsHandler.post(checkBatteryRunnable)
 		startStreamCheck()
 		getSystemService(DisplayManager::class.java)?.registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
@@ -444,6 +454,7 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 		}
 		wifiLock?.release()
 		wifiLock = null
+		arabicSubtitles?.stop()
 		rumble?.stop()
 		statsHandler.removeCallbacks(updateStatsRunnable)
 		statsHandler.removeCallbacks(checkBatteryRunnable)
@@ -572,6 +583,8 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 		binding.statsTextView.isVisible = !isInPictureInPictureMode && Preferences(this).streamStatsEnabled
 		supportFragmentManager.findFragmentById(R.id.controlsFragment)?.view?.isVisible = !isInPictureInPictureMode
 		binding.streamTouchpadView.isVisible = !isInPictureInPictureMode && Preferences(this).touchscreenTouchpadEnabled
+		if(isInPictureInPictureMode)
+			binding.arabicSubtitleView.isVisible = false
 	}
 
 	private val statsHandler = Handler(Looper.getMainLooper())
@@ -749,6 +762,8 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 		super.onDestroy()
 		rumble?.stop()
 		videoRenderer?.release()
+		arabicSubtitles?.release()
+		arabicSubtitles = null
 		controlsDisposable.dispose()
 	}
 
@@ -927,6 +942,45 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 	/**
 	 * Lets controller-only setups (TV boxes) leave the stream, opened with L1 + R1 + Options + Share.
 	 */
+	private fun setArabicSubtitlesEnabled(enabled: Boolean)
+	{
+		Preferences(this).arabicSubtitlesEnabled = enabled
+		if(binding.arabicSubtitlesSwitch.isChecked != enabled)
+			binding.arabicSubtitlesSwitch.isChecked = enabled
+		if(enabled)
+			startArabicSubtitles()
+		else
+			arabicSubtitles?.stop()
+	}
+
+	private fun startArabicSubtitles()
+	{
+		val prefs = Preferences(this)
+		binding.arabicSubtitleView.textSize = prefs.arabicSubtitlesTextSize.toFloat()
+		val subtitles = arabicSubtitles ?: ArabicSubtitles(
+			streamView = { if(binding.debandSurfaceView.isVisible) binding.debandSurfaceView else binding.surfaceView },
+			onText = { text ->
+				binding.arabicSubtitleView.text = text ?: ""
+				binding.arabicSubtitleView.isVisible = !text.isNullOrEmpty() && !isInPictureInPictureModeCompat()
+			},
+			onStatus = { status ->
+				val message = when(status)
+				{
+					ArabicSubtitles.Status.MODEL_DOWNLOADING -> R.string.arabic_subtitles_downloading
+					ArabicSubtitles.Status.MODEL_READY -> R.string.arabic_subtitles_ready
+					ArabicSubtitles.Status.MODEL_FAILED -> R.string.arabic_subtitles_model_failed
+					ArabicSubtitles.Status.CAPTURE_UNSUPPORTED -> R.string.arabic_subtitles_capture_unsupported
+				}
+				Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+			}).also { arabicSubtitles = it }
+		subtitles.online = prefs.arabicSubtitlesOnline
+		subtitles.regionTop = prefs.arabicSubtitlesRegionTop / 100f
+		subtitles.start()
+	}
+
+	private fun isInPictureInPictureModeCompat() =
+		Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode
+
 	private fun showStreamMenu()
 	{
 		if(dialog != null)
@@ -934,6 +988,7 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 		// The dialog takes the input from here on, so the console must not see the combo held forever
 		viewModel.input.releaseAll()
 		val statsVisible = binding.statsTextView.isVisible
+		val subtitlesOn = Preferences(this).arabicSubtitlesEnabled
 		val title = controllerBattery()?.let { (percent, charging) ->
 			getString(if(charging) R.string.stream_menu_title_battery_charging else R.string.stream_menu_title_battery, percent)
 		} ?: getString(R.string.stream_menu_title)
@@ -943,6 +998,7 @@ class StreamActivity : AppCompatActivity(), View.OnSystemUiVisibilityChangeListe
 			getString(R.string.action_stream_menu_resume) to {},
 			getString(R.string.button_ps) to { pressPsButton() },
 			getString(if(statsVisible) R.string.action_hide_stats else R.string.action_show_stats) to { setStatsVisible(!statsVisible) },
+			getString(if(subtitlesOn) R.string.action_arabic_subtitles_off else R.string.action_arabic_subtitles_on) to { setArabicSubtitlesEnabled(!subtitlesOn) },
 			upscalingEnabled?.let { enabled ->
 				getString(if(enabled) R.string.action_upscaling_off else R.string.action_upscaling_on) to { setUpscalingEnabled(!enabled) }
 			},

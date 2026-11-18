@@ -376,4 +376,17 @@
     <string name="help_not_found_remote_play">فعّل اللعب عن بُعد على جهاز الألعاب: على PS5 من الإعدادات ← النظام ← اللعب عن بُعد، وعلى PS4 من الإعدادات ← إعدادات اتصال اللعب عن بُعد.</string>
     <string name="help_not_found_ip">ألم يظهر بعد؟ أضف جهاز الألعاب بعنوان IP الخاص به، الذي يظهر على جهاز الألعاب في الإعدادات ← الشبكة ← حالة الاتصال.</string>
     <string name="help_not_found_away">خارج المنزل؟ سجّل الدخول إلى PlayStation Network من الإعدادات ← اللعب خارج المنزل.</string>
+    <string name="stream_arabic_subtitles">ترجمة عربية</string>
+    <string name="arabic_subtitles_downloading">جارٍ تحميل نموذج الترجمة العربية (نحو 30 ميغابايت، مرة واحدة)…</string>
+    <string name="arabic_subtitles_ready">الترجمة العربية جاهزة</string>
+    <string name="arabic_subtitles_model_failed">تعذّر تحميل نموذج الترجمة. الترجمة عبر الإنترنت تعمل ما دام هناك اتصال.</string>
+    <string name="arabic_subtitles_capture_unsupported">لا يستطيع هذا الجهاز نسخ صورة البث. فعّل «تنعيم التدرجات» من الإعدادات ثم أعد المحاولة.</string>
+    <string name="preferences_category_arabic_subtitles">الترجمة العربية</string>
+    <string name="preferences_arabic_subtitles_online_title">الترجمة عبر الإنترنت</string>
+    <string name="preferences_arabic_subtitles_online_summary">عربية أفضل من ترجمة Google المجانية. لا يُرسل إلا نص الترجمة الإنجليزية.</string>
+    <string name="preferences_arabic_subtitles_text_size_title">حجم الترجمة</string>
+    <string name="preferences_arabic_subtitles_region_title">أين تبدأ ترجمة اللعبة</string>
+    <string name="preferences_arabic_subtitles_region_summary">نسبة من ارتفاع الصورة من الأعلى. قلّلها إذا كانت اللعبة تعرض ترجمتها أعلى من المعتاد.</string>
+    <string name="action_arabic_subtitles_on">تشغيل الترجمة العربية</string>
+    <string name="action_arabic_subtitles_off">إيقاف الترجمة العربية</string>
 </resources>

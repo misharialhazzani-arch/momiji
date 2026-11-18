@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Momiji</string>
+    <string name="app_name" translatable="false">سرد</string>
     <string name="title_settings">Settings</string>
     <string name="alert_message_standby_wakeup">The console is in rest mode. Wake it up and connect as soon as it\'s ready, instead of connecting right away?</string>
     <string name="alert_message_session_create_error">Failed to create Session: %s</string>
@@ -418,4 +418,17 @@
     <string name="help_not_found_remote_play">Turn on Remote Play on the console: on a PS5 in Settings > System > Remote Play, on a PS4 in Settings > Remote Play Connection Settings.</string>
     <string name="help_not_found_ip">Still not found? Add the console by its IP address, which it shows in Settings > Network > Connection Status.</string>
     <string name="help_not_found_away">Away from home? Sign in to PlayStation Network in Settings > Play away from home.</string>
+    <string name="stream_arabic_subtitles">Arabic subtitles</string>
+    <string name="arabic_subtitles_downloading">Downloading the Arabic translation model (about 30 MB, once)…</string>
+    <string name="arabic_subtitles_ready">Arabic subtitles are ready</string>
+    <string name="arabic_subtitles_model_failed">Couldn\'t download the translation model. Online translation still works when there\'s internet.</string>
+    <string name="arabic_subtitles_capture_unsupported">This device can\'t copy the stream picture. Turn on Smooth gradients in Settings and try again.</string>
+    <string name="preferences_category_arabic_subtitles">Arabic subtitles</string>
+    <string name="preferences_arabic_subtitles_online_title">Online translation</string>
+    <string name="preferences_arabic_subtitles_online_summary">Better Arabic from Google\'s free translation. Sends only the English subtitle text.</string>
+    <string name="preferences_arabic_subtitles_text_size_title">Subtitle size</string>
+    <string name="preferences_arabic_subtitles_region_title">Where the game\'s subtitles start</string>
+    <string name="preferences_arabic_subtitles_region_summary">Percent of the picture\'s height from the top. Lower it if the game shows its subtitles higher up.</string>
+    <string name="action_arabic_subtitles_on">Arabic subtitles on</string>
+    <string name="action_arabic_subtitles_off">Arabic subtitles off</string>
 </resources>

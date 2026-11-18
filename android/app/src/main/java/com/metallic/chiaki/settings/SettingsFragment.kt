@@ -50,6 +50,7 @@ class DataStore(val preferences: Preferences): PreferenceDataStore()
 		preferences.touchscreenTouchpadEnabledKey -> preferences.touchscreenTouchpadEnabled
 		preferences.secondScreenKey -> preferences.secondScreen
 		preferences.pictureInPictureKey -> preferences.pictureInPicture
+		preferences.arabicSubtitlesOnlineKey -> preferences.arabicSubtitlesOnline
 		else -> defValue
 	}
 
@@ -68,12 +69,25 @@ class DataStore(val preferences: Preferences): PreferenceDataStore()
 			preferences.touchscreenTouchpadEnabledKey -> preferences.touchscreenTouchpadEnabled = value
 			preferences.secondScreenKey -> preferences.secondScreen = value
 			preferences.pictureInPictureKey -> preferences.pictureInPicture = value
+			preferences.arabicSubtitlesOnlineKey -> preferences.arabicSubtitlesOnline = value
 		}
 	}
 
-	override fun getInt(key: String?, defValue: Int) = defValue
+	override fun getInt(key: String?, defValue: Int) = when(key)
+	{
+		preferences.arabicSubtitlesTextSizeKey -> preferences.arabicSubtitlesTextSize
+		preferences.arabicSubtitlesRegionTopKey -> preferences.arabicSubtitlesRegionTop
+		else -> defValue
+	}
 
-	override fun putInt(key: String?, value: Int) {}
+	override fun putInt(key: String?, value: Int)
+	{
+		when(key)
+		{
+			preferences.arabicSubtitlesTextSizeKey -> preferences.arabicSubtitlesTextSize = value
+			preferences.arabicSubtitlesRegionTopKey -> preferences.arabicSubtitlesRegionTop = value
+		}
+	}
 
 	override fun getString(key: String, defValue: String?) = when
 	{

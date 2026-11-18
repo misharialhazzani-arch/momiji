@@ -183,6 +183,28 @@ class Preferences(context: Context)
 		get() = sharedPreferences.getBoolean("support_prompt_done", false)
 		set(value) { sharedPreferences.edit().putBoolean("support_prompt_done", value).apply() }
 
+	// Arabic subtitles: reads the game's English subtitles from the stream and shows them in Arabic
+	val arabicSubtitlesEnabledKey get() = "arabic_subtitles_enabled"
+	var arabicSubtitlesEnabled
+		get() = sharedPreferences.getBoolean(arabicSubtitlesEnabledKey, false)
+		set(value) { sharedPreferences.edit().putBoolean(arabicSubtitlesEnabledKey, value).apply() }
+
+	val arabicSubtitlesOnlineKey get() = "arabic_subtitles_online"
+	var arabicSubtitlesOnline
+		get() = sharedPreferences.getBoolean(arabicSubtitlesOnlineKey, true)
+		set(value) { sharedPreferences.edit().putBoolean(arabicSubtitlesOnlineKey, value).apply() }
+
+	val arabicSubtitlesTextSizeKey get() = "arabic_subtitles_text_size"
+	var arabicSubtitlesTextSize
+		get() = sharedPreferences.getInt(arabicSubtitlesTextSizeKey, 24)
+		set(value) { sharedPreferences.edit().putInt(arabicSubtitlesTextSizeKey, value).apply() }
+
+	// Where the game's subtitles start, in percent of the picture's height from the top
+	val arabicSubtitlesRegionTopKey get() = "arabic_subtitles_region_top"
+	var arabicSubtitlesRegionTop
+		get() = sharedPreferences.getInt(arabicSubtitlesRegionTopKey, 68)
+		set(value) { sharedPreferences.edit().putInt(arabicSubtitlesRegionTopKey, value).apply() }
+
 	val streamStatsEnabledKey get() = "stream_stats_enabled"
 	var streamStatsEnabled
 		get() = sharedPreferences.getBoolean(streamStatsEnabledKey, false)
