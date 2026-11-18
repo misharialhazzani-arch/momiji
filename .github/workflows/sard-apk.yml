@@ -60,7 +60,17 @@ jobs:
 
       - name: Build
         working-directory: android
-        run: ./gradlew --no-daemon --stacktrace assembleFdroidRelease
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          if ! ./gradlew --no-daemon --stacktrace assembleFdroidRelease 2>&1 | tee build.log; then
+            # Show the error in the run's annotations, which can be read without signing in
+            WHY=$(grep -E -A12 "What went wrong" build.log | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')
+            ERRS=$(grep -E "^e: |error:|\[CXX[0-9]+\]|CMake Error" build.log | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=What went wrong::${WHY:0:20000}"
+            echo "::error title=Errors::${ERRS:0:20000}"
+            exit 1
+          fi
 
       - name: Collect the APK
         run: |
