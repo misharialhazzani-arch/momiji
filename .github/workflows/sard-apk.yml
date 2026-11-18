@@ -6,6 +6,10 @@ name: Build Sard APK
 on:
   push:
     branches: [sard]
+    paths-ignore:
+      - "sard-overlay/**"
+      - "sard-ios/**"
+      - ".github/workflows/sard-tv.yml"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +32,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      - name: Install protoc and the nanopb generator's Python modules
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq protobuf-compiler python3-protobuf > /dev/null
+          protoc --version
 
       - name: Install the NDK and CMake the app needs
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" > /dev/null
@@ -60,7 +70,17 @@ jobs:
 
       - name: Build
         working-directory: android
-        run: ./gradlew --no-daemon --stacktrace assembleFdroidRelease
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          if ! ./gradlew --no-daemon --stacktrace assembleFdroidRelease 2>&1 | tee build.log; then
+            # Show the error in the run's annotations, which can be read without signing in
+            WHY=$(grep -E -A12 "What went wrong" build.log | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')
+            ERRS=$(grep -E "^e: |error:|\[CXX[0-9]+\]|CMake Error" build.log | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=What went wrong::${WHY:0:20000}"
+            echo "::error title=Errors::${ERRS:0:20000}"
+            exit 1
+          fi
 
       - name: Collect the APK
         run: |
