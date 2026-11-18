@@ -6,6 +6,10 @@ name: Build Sard APK
 on:
   push:
     branches: [sard]
+    paths-ignore:
+      - "sard-overlay/**"
+      - "sard-ios/**"
+      - ".github/workflows/sard-tv.yml"
   workflow_dispatch:
 
 permissions:

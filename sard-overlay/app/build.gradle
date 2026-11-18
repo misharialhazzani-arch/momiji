@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.sard.tv'
+    compileSdk 36
+    defaultConfig {
+        applicationId "io.github.misharialhazzani.sardtv"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "0.1"
+    }
+    signingConfigs {
+        release
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    // Signing from local.properties, written by the GitHub workflow
+    Properties properties = new Properties()
+    def propertiesFile = rootProject.file("local.properties")
+    if (propertiesFile.exists())
+        properties.load(propertiesFile.newDataInputStream())
+    if (properties.containsKey("sardKeystore")) {
+        signingConfigs.release.storeFile = file(properties.get("sardKeystore"))
+        signingConfigs.release.storePassword = properties.get("sardKeystorePW")
+        signingConfigs.release.keyAlias = properties.get("sardKeyAlias")
+        signingConfigs.release.keyPassword = properties.get("sardKeyPW")
+        buildTypes.release.signingConfig = signingConfigs.release
+    }
+}
